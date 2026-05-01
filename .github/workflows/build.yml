@@ -1,43 +1,41 @@
-name: Build Windows Executable
+name: Build Windows App
 
-on:
-  push:
-    branches: [ main ]  # Runs every time you push to 'main'
-  workflow_dispatch:    # Allows you to run it manually from the Actions tab
+on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-latest  # This spins up a real Windows machine
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pyinstaller
+      - name: Install Dependencies
+        run: |
+          pip install PySide6 pyinstaller
+          # Add any other requirements here
 
-    - name: Download FFmpeg for Windows
-      run: |
-        mkdir ffmpeg
-        curl -L https://github.com/GyanD/codexffmpeg/releases/download/2024-01-25-git-456073801a/ffmpeg-2024-01-25-git-456073801a-essentials_build.7z -o ffmpeg.7z
-        # Using 7z (available on Windows runners) to extract
-        7z e ffmpeg.7z -offmpeg ffmpeg.exe -r
-      # Note: This downloads a specific build. You can update the link to the latest essentials build.
+      - name: Setup FFmpeg
+        uses: FedericoCarboni/setup-ffmpeg@v3
+        id: setup-ffmpeg
 
-    - name: Build with PyInstaller
-      run: |
-        pyinstaller --noconsole --onefile --add-data "ffmpeg/ffmpeg.exe;ffmpeg" main.py
+      - name: Prepare FFmpeg Folder
+        run: |
+          mkdir ffmpeg
+          # Copy the ffmpeg.exe from the Action's path to your local folder
+          copy "${{ steps.setup-ffmpeg.outputs.ffmpeg-path }}\ffmpeg.exe" "ffmpeg/ffmpeg.exe"
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: Windows-Audio-Compressor
-        path: dist/main.exe
+      - name: Build Executable
+        run: |
+          pyinstaller --noconsole --onefile --add-data "ffmpeg/ffmpeg.exe;ffmpeg" main.py
+
+      - name: Upload Finished EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: AudioCompressor-Windows
+          path: dist/main.exe

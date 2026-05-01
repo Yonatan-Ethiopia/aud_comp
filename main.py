@@ -8,8 +8,21 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, QThread, Signal, QSize
 
-ffmpeg_path = os.path.join(sys._MEIPASS, "ffmpeg", "ffmpeg")
+#ffmpeg_path = os.path.join(sys._MEIPASS, "ffmpeg", "ffmpeg")
 
+def get_ffmpeg_path():
+    
+    if getattr(sys, 'frozen', False):
+        base_path = sys._MEIPASS
+    else:
+        
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    
+
+    ext = ".exe" if platform.system() == "Windows" else ""
+    return os.path.join(base_path, "ffmpeg", f"ffmpeg{ext}")
+
+ffmpeg_path = get_ffmpeg_path()
 class Worker(QThread):
     finished = Signal()
     def __init__(self, file, mode):
