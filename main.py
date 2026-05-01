@@ -19,7 +19,7 @@ def get_ffmpeg_path():
         base_path = os.path.dirname(os.path.abspath(__file__))
     
 
-    ext = ".exe" if platform.system() == "Windows" else ""
+    ext = ".exe"
     return os.path.join(base_path, "ffmpeg", f"ffmpeg{ext}")
 
 ffmpeg_path = get_ffmpeg_path()
